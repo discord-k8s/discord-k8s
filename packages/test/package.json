@@ -1,0 +1,16 @@
+{
+  "name": "@discord-k8s/wortestker",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "dependencies": {
+    "@discord-k8s/worker": "workspace:^"
+  }
+}

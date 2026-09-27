@@ -1,0 +1,18 @@
+{
+  "name": "@discord-k8s/worker",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "dependencies": {
+    "@discord-k8s/types": "workspace:^",
+    "@jpbberry/typed-emitter": "^1.2.1",
+    "socket.io-client": "^4.8.4"
+  }
+}

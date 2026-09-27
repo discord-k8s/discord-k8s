@@ -1,0 +1,20 @@
+{
+  "name": "@discord-k8s/orchestrator",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "dependencies": {
+    "@discord-k8s/types": "workspace:^",
+    "@discordjs/collection": "^2.1.1",
+    "@jpbberry/typed-emitter": "^1.2.1",
+    "fastify": "^5.12.5",
+    "socket.io": "^4.8.4"
+  }
+}

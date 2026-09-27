@@ -1,0 +1,19 @@
+{
+  "name": "@discord-k8s/discord-k8s",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "pnpm@11.25.0",
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^7.0.2"
+  }
+}
