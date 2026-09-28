@@ -1,0 +1,4 @@
+packages:
+  - packages/*
+minimumReleaseAgeExclude:
+  - '@jpbberry/typed-emitter@1.2.1'

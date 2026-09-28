@@ -1,17 +1,19 @@
 import { setTimeout } from "timers/promises";
+import { Logger } from "./Logger.js";
 
-export abstract class IdentityQueue {
+const log = new Logger("IdentityQueue");
+
+export class IdentityQueue {
   public constructor(
     private readonly maxConcurrency: number,
     private readonly spawnInterval: number,
+    /**
+     * Inform the scheduler to let a shard continue to identify
+     * @param shardId Shard that is ready to identify
+     * @returns {Promise<boolean>} Where to wait the shard interval (e.g false if worker cannot be communicated with), resolves successfully after shard has logged in
+     */
+    private readonly identifyShard: (shardId: number) => Promise<boolean>,
   ) {}
-
-  /**
-   * Inform the scheduler to let a shard continue to identify
-   * @param shardId Shard that is ready to identify
-   * @returns {Promise<boolean>} Where to wait the shard interval (e.g false if worker cannot be communicated with), resolves successfully after shard has logged in
-   */
-  abstract identifyShard(shardId: number): Promise<boolean>;
 
   private buckets: Array<number[] | null> = [];
 
@@ -42,21 +44,20 @@ export abstract class IdentityQueue {
 
     if (next === undefined) {
       this.buckets[bucket] = null;
-      console.log(`Reached end of bucket #${bucket}`);
+      log.info(`Reached end of bucket #${bucket}`);
       return;
     }
 
-    console.log(`Requesting identify for shard ${next}`);
+    log.info(`Requesting identify for shard ${next}`);
 
     const waiting = await this.identifyShard(next).catch((err) => {
-      console.error(
-        `Received unexpected error during shard ${next} startup`,
-        err,
+      log.error(
+        `Received unexpected error during shard ${next} startup: ${err}`,
       );
       return true;
     });
 
-    console.log(
+    log.info(
       `Identify sequence complete for shard ${next}. ${waiting ? `Waiting ${this.spawnInterval}ms for bucket ${bucket}` : `Skipping wait for bucket ${bucket}`}`,
     );
 
