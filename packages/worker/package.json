@@ -2,17 +2,28 @@
   "name": "@discord-k8s/worker",
   "version": "0.0.1",
   "scripts": {
-    "build": "tsc"
+    "build": "tsdown"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "engines": {
     "node": ">=24.17.0"
   },
   "dependencies": {
-    "@discord-k8s/types": "workspace:^",
+    "@discord-k8s/common": "workspace:^",
     "@jpbberry/typed-emitter": "^1.2.1",
     "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.0"
   }
 }

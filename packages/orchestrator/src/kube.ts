@@ -1,6 +1,6 @@
 import type { Config, ReplicatedResource } from "./config.js";
 import * as k8s from "@kubernetes/client-node";
-import { Logger } from "./Logger.js";
+import { Logger } from "@discord-k8s/common";
 
 const log = new Logger("Kube");
 
@@ -34,9 +34,9 @@ export const createKubeConfig = async (config: Config["kube"]) => {
       try {
         log.error(
           `Couldn't connect to namespace ${config.namespace}, error = ` +
-            JSON.parse(err.body).message,
+          JSON.parse(err.body).message,
         );
-      } catch (_e) {}
+      } catch (_e) { }
     }
     throw err;
   }
@@ -56,11 +56,11 @@ export const getReplicatedResourceScale = async (
   const request = { name: resource.name, namespace };
 
   switch (resource.kind) {
-    case "statefulset":
+    case "StatefulSet":
       return await api.readNamespacedStatefulSetScale(request);
-    case "deployment":
+    case "Deployment":
       return await api.readNamespacedDeploymentScale(request);
-    case "replicaset":
+    case "ReplicaSet":
       return await api.readNamespacedReplicaSetScale(request);
   }
 };
@@ -89,33 +89,11 @@ export const setReplicatedResourceScale = async (
   );
 
   switch (resource.kind) {
-    case "statefulset":
+    case "StatefulSet":
       return await api.patchNamespacedStatefulSetScale(request, options);
-    case "deployment":
+    case "Deployment":
       return await api.patchNamespacedDeploymentScale(request, options);
-    case "replicaset":
+    case "ReplicaSet":
       return await api.patchNamespacedReplicaSetScale(request, options);
-  }
-};
-
-export const replicatedResourceScaleOp = (
-  api: k8s.AppsV1Api,
-  resourceDef: ReplicatedResource,
-) => {
-  if (resourceDef.kind === "statefulset") {
-    return {
-      get: api.readNamespacedStatefulSetScale,
-      patch: api.patchNamespacedStatefulSetScale,
-    };
-  } else if (resourceDef.kind == "deployment") {
-    return {
-      get: api.readNamespacedDeploymentScale,
-      patch: api.patchNamespacedDeploymentScale,
-    };
-  } else if (resourceDef.kind == "replicaset") {
-    return {
-      get: api.readNamespacedReplicaSetScale,
-      patch: api.patchNamespacedReplicaSetScale,
-    };
   }
 };

@@ -11,7 +11,7 @@
     "node": ">=24.17.0"
   },
   "dependencies": {
-    "@discord-k8s/types": "workspace:^",
+    "@discord-k8s/common": "workspace:^",
     "@discordjs/collection": "^2.1.1",
     "@jpbberry/typed-emitter": "^1.2.1",
     "@kubernetes/client-node": "^2.0.0",

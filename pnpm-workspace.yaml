@@ -1,4 +1,8 @@
 packages:
   - packages/*
+allowBuilds:
+  esbuild: false
 minimumReleaseAgeExclude:
   - '@jpbberry/typed-emitter@1.2.1'
+  - '@kubernetes/client-node@2.0.0'
+  - zod2md@0.3.6

@@ -6,14 +6,14 @@ export type ModeConfig = {
 };
 
 export type ModeCreator<T extends keyof ModeConfig> = (
-  config: Config & { workers: ModeConfig[T] },
+  config: ModeConfig[T],
   kc: KubeConfig,
+  namespace: string
 ) => Mode;
 
 export interface Mode {
   getWorkerCount: (shardCount: number) => Promise<number>;
-  getWorkerShardChunks: (
-    shardCount: number,
-    workerCount: number,
-  ) => Promise<number[][]>;
 }
+
+export * from './fit.js'
+export * from './set.js'

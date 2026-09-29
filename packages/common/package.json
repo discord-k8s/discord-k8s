@@ -1,5 +1,5 @@
 {
-  "name": "@discord-k8s/wortestker",
+  "name": "@discord-k8s/common",
   "version": "0.0.1",
   "scripts": {
     "build": "tsc"
@@ -9,8 +9,5 @@
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=24.17.0"
-  },
-  "dependencies": {
-    "@discord-k8s/worker": "workspace:^"
   }
 }

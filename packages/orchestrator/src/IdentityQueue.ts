@@ -1,5 +1,5 @@
 import { setTimeout } from "timers/promises";
-import { Logger } from "./Logger.js";
+import { Logger } from "@discord-k8s/common";
 
 const log = new Logger("IdentityQueue");
 
@@ -13,7 +13,7 @@ export class IdentityQueue {
      * @returns {Promise<boolean>} Where to wait the shard interval (e.g false if worker cannot be communicated with), resolves successfully after shard has logged in
      */
     private readonly identifyShard: (shardId: number) => Promise<boolean>,
-  ) {}
+  ) { }
 
   private buckets: Array<number[] | null> = [];
 

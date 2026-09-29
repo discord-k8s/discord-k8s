@@ -2,23 +2,34 @@ import fastify from "fastify";
 import { Server } from "socket.io";
 import { parseConfig, type ConfigInput } from "./config.js";
 import { IdentityQueue } from "./IdentityQueue.js";
-import type { OrchestratorSocket } from "@discord-k8s/types";
 import { getShardingDetails } from "./sharder.js";
-import { Logger } from "./Logger.js";
+import { Logger } from "@discord-k8s/common";
+import type { OrchestratorSocket } from "@discord-k8s/common";
 import { createKubeConfig } from "./kube.js";
+import { createFit, createSet } from "./modes/index.js";
+import { chunkWorkerShards, createShardAssigner } from "./chunking.js";
 
 const log = new Logger("Orchestrator");
 
 export const startOrchestrator = async (configIn: ConfigInput | string) => {
   const config = parseConfig(configIn);
 
-  const kube = createKubeConfig(config.kube);
+  const kube = await createKubeConfig(config.kube);
 
-  const gateway = await getShardingDetails(config);
-  // const workerCount = await getWorkerCount(config, gateway.shardCount);
+  log.info(`Using mode: ${config.workers.mode} for worker assignment`);
+  const mode = config.workers.mode == 'fit'
+    ? createFit(config.workers, kube, config.kube.namespace)
+    : createSet(config.workers, kube, config.kube.namespace);
+
+  const { shardCount, maxConcurrency } = await getShardingDetails(config);
+  const workerCount = await mode.getWorkerCount(shardCount);
+
+  log.info(`Using chunking mode: ${config.workers.chunking} for shard assignment`);
+  const shardAssigner = createShardAssigner(config.workers.chunking, shardCount, workerCount);
+  const workerShards = chunkWorkerShards(shardAssigner, shardCount, workerCount);
 
   log.info(
-    `Generated basic config :: shardCount=${gateway.shardCount}, maxConcurrency=${gateway.maxConcurrency}`,
+    `Generated basic config :: workerCount=${workerCount}, shardCount=${shardCount}, maxConcurrency=${maxConcurrency}`,
   );
 
   const app = fastify();
@@ -31,17 +42,27 @@ export const startOrchestrator = async (configIn: ConfigInput | string) => {
     res.send({ healthy: true });
   });
 
+  app.get('/workers', (req, res) => {
+    res.send(workerShards)
+  })
+
   const workers = io.of("/orchestrator/ws");
   const identityQueue = new IdentityQueue(
-    gateway.maxConcurrency,
+    maxConcurrency,
     config.sharding.identifyInterval,
     (shardId) => identifyShard(shardId),
   );
 
   const identifyShard = async (shardId: number) => {
+    const workerId = shardAssigner(shardId)
+    const worker = (await workers.to(`workers-${workerId}`).fetchSockets())?.[0];
+    if (!worker) {
+      log.warn(`Attempted to identify shard ${shardId}, but no active worker was found for assigned worker ${workerId}`);
+      return false
+    };
+
     return new Promise<boolean>((resolve, reject) => {
-      workers
-        .to(`workers-0`)
+      worker
         .timeout(30e3)
         .emit("identifyShard", shardId, (err) => {
           if (err) {
@@ -57,7 +78,14 @@ export const startOrchestrator = async (configIn: ConfigInput | string) => {
 
     socket.on("hello", async (requestedWorkerId, callback) => {
       if (workerId !== null) {
-        return callback({ shards: [1, 2, 3, 4] });
+        return callback({ shards: workerShards[workerId]!, totalShards: shardCount });
+      }
+
+      if (!workerShards[requestedWorkerId]) {
+        log.warn(
+          `Rejecting socket ${socket.id} requesting worker ${requestedWorkerId}, worker does not exist`,
+        );
+        return callback("Worker does not exist");
       }
 
       const existingSockets = await workers
@@ -76,7 +104,16 @@ export const startOrchestrator = async (configIn: ConfigInput | string) => {
       log.info(`Socket ${socket.id} connected as worker ${requestedWorkerId}`);
       workerId = requestedWorkerId;
       socket.join(`workers-${requestedWorkerId}`);
-      callback({ shards: [1, 2, 3, 4] });
+      callback({
+        shards: workerShards[requestedWorkerId],
+        totalShards: shardCount
+      });
+    });
+
+    socket.on('disconnect', () => {
+      if (workerId !== null) {
+        log.info(`Socket ${socket.id} disconnected as worker ${workerId}`);
+      }
     });
 
     socket.on("requestIdentify", (shardId) => {
