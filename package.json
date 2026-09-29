@@ -8,6 +8,7 @@
     "build": "pnpm -r build",
     "docgen": "zod2md --entry ./packages/orchestrator/src/config.ts --output config.md --title Configuration"
   },
+  "license": "Apache-2.0",
   "type": "module",
   "workspaces": [
     "packages/*"
