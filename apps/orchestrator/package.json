@@ -1,0 +1,14 @@
+{
+  "name": "@discord-k8s/orchestrator-image",
+  "scripts": {
+    "build": "exit 0"
+  },
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.25.0",
+  "dependencies": {
+    "@discord-k8s/orchestrator": "workspace:^"
+  }
+}
