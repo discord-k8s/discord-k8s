@@ -1,0 +1,28 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: orchestrator-role
+rules:
+  - apiGroups: ["apps"]
+    resources: ["statefulsets/scale", "deployments/scale", "replicasets/scale"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: orchestrator-binding
+subjects:
+  - kind: ServiceAccount
+    name: orchestrator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: orchestrator-role
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orchestrator

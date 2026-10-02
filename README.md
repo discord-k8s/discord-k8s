@@ -173,7 +173,7 @@ workers:
   name: censorbot-worker
 ```
 
-This will take the number of shards for the bot (configured or automatic), and divide it by 5 (shardsPerWorker) to get the number of workers required. E.g 100 shards = 20 workers. It will then make a patch to `/scale` for the defined resource, with the new `replicas` value. When using this mode, the orchestrator will require the `[kind]/scale - [patch, get]` RBAC permissions.
+This will take the number of shards for the bot (configured or automatic), and divide it by 5 (shardsPerWorker) to get the number of workers required. E.g 100 shards = 20 workers. It will then make a patch to `/scale` for the defined resource, with the new `replicas` value. When using this mode, the orchestrator will require the `[kind]/scale - [patch, get]` RBAC permissions. Check the example rbac policies at /rbac.yml in this repo.
 
 This means that your worker pods can be scaled automatically when Discord changes the number of shards for your bot (if using the gateway), and is super convenient to just leave alone, while still giving you direct control over your deployment pattern.
 
