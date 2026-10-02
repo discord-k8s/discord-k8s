@@ -46,17 +46,17 @@ Create a Kubernetes `Deployment` in the namespace you'll be running your bots. R
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: censorbot-orchestrator
+  name: orchestrator
   namespace: censorbot
 spec:
   replicas: 1 # The orchestrator must only be a single instance for state
   selector:
     matchLabels:
-      app: censorbot-orchestrator
+      app: orchestrator
   template:
     metadata:
       labels:
-        app: censorbot-orchestrator
+        app: orchestrator
     spec:
       containers:
         - name: orchestrator
@@ -77,16 +77,17 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: censorbot-orchestrator-config
+            name: orchestrator-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: censorbot-orchestrator
+  name: orchestrator
+  namespace: censorbot
 spec:
   type: ClusterIP
   selector:
-    app: censorbot-orchestrator
+    app: orchestrator
   ports:
     - name: http
       port: 8080
@@ -96,7 +97,7 @@ spec:
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: censorbot-orchestrator-config
+  name: orchestrator-config
   namespace: censorbot
 data:
   config.yaml: |
@@ -118,7 +119,7 @@ import { Orchestrator } from "@discord-k8s/worker";
 const workerId = parseInt(process.env.WORKER_ID!);
 
 const orchestrator = new Orchestrator({
-  url: 'censorbot-orchestrator.censorbot.svc' // defaults to :8080 and ws://
+  url: 'orchestrator.censorbot.svc' // defaults to :8080 and ws://
   workerId,
   onReshard() { // required function. This will be called when there's been a change in the shard assignments, or counts, which will necesitate a full re-identify of the shards in this worker.
     process.exit(0) // the easiest option is just to exit the process and let Kubernetes restart it, which will re-run the worker with the new shard assignments. But more complicated logic can be implemented here if you want to handle the resharding without restarting the process.

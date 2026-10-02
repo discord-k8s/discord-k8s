@@ -172,10 +172,6 @@ const DiscordSpec = withDeepDefaults(
 const KubeSpec = withDeepIntersectionDefaults(
   z
     .object({
-      /**
-       * Namespace to fetch details from
-       * @default Content of serviceaccount/namespace file or $NAMESPACE
-       */
       namespace: z
         .string()
         .default(() => {
