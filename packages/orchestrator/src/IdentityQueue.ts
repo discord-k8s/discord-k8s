@@ -13,22 +13,27 @@ export class IdentityQueue {
      * @returns {Promise<boolean>} Where to wait the shard interval (e.g false if worker cannot be communicated with), resolves successfully after shard has logged in
      */
     private readonly identifyShard: (shardId: number) => Promise<boolean>,
-  ) { }
+  ) {}
 
   private buckets: Array<number[] | null> = [];
 
   register(id: number): void {
     const bucket = id % this.maxConcurrency;
 
+    log.debug(`Registering shard ${id} for bucket #${bucket}`);
+
     let running = true;
 
     if (!this.buckets[bucket]) {
+      log.debug(`Starting bucket #${bucket} from scratch for shard ${id}`);
       running = false;
       this.buckets[bucket] = [];
     }
 
     if (!this.buckets[bucket]?.includes(id)) {
       this.buckets[bucket]?.push(id);
+    } else {
+      log.debug(`Shard ${id} is already registered in bucket #${bucket}`);
     }
 
     this.buckets[bucket] = this.buckets[bucket]?.sort(
@@ -44,11 +49,11 @@ export class IdentityQueue {
 
     if (next === undefined) {
       this.buckets[bucket] = null;
-      log.info(`Reached end of bucket #${bucket}`);
+      log.debug(`Reached end of bucket #${bucket}`);
       return;
     }
 
-    log.info(`Requesting identify for shard ${next}`);
+    log.info(`Allowing identify for shard ${next}`);
 
     const waiting = await this.identifyShard(next).catch((err) => {
       log.error(

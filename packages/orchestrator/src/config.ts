@@ -3,6 +3,8 @@ import fs from "fs";
 import yaml from "yaml";
 import { Logger } from "@discord-k8s/common";
 
+const log = new Logger("Config");
+
 const envVarTransform = (
   d: z.core.output<ZodString>,
   ctx: RefinementCtx<z.core.output<ZodString>>,
@@ -10,6 +12,7 @@ const envVarTransform = (
   if (!d.startsWith("$")) return d;
   const envVar = process.env[d.slice(1)];
   if (!envVar) {
+    log.debug(`Missing environment variable ${d} for config property`);
     ctx.addIssue({
       code: "invalid_value",
       message: `Environment variable is not defined`,
@@ -17,6 +20,7 @@ const envVarTransform = (
     });
     return z.NEVER;
   }
+  log.debug(`Loaded environment variable ${d} for config property`);
   return envVar;
 };
 
@@ -221,8 +225,6 @@ export const ConfigSpec = z.object({
 export type Config = z.infer<typeof ConfigSpec>;
 export type ConfigInput = z.input<typeof ConfigSpec>;
 
-const log = new Logger("Config");
-
 export const parseConfig = (input: ConfigInput | string): Config => {
   if (typeof input === "string") {
     log.info(`Attempting to load config from file: ${input}`);
@@ -238,6 +240,14 @@ export const parseConfig = (input: ConfigInput | string): Config => {
   if (!result.success) {
     log.error(z.prettifyError(result.error));
     throw result.error;
+  }
+
+  if (log.isLogLevel("debug")) {
+    const clonedData = structuredClone(result.data);
+    if ("token" in clonedData.sharding) {
+      clonedData.sharding.token = "[REDACTED]";
+    }
+    log.debug(`Parsed config: ${JSON.stringify(clonedData)}`);
   }
 
   return result.data;
