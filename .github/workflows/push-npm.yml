@@ -26,4 +26,4 @@ jobs:
       - name: Publish packages
         run: pnpm -r publish --no-git-checks --access=public --registry https://npm.pkg.github.com
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PNPM_CONFIG__AUTH: '{"https://npm.pkg.github.com":{"@discord-k8s":{"authToken":"${{ secrets.GITHUB_TOKEN }}"}}}'
