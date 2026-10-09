@@ -1,0 +1,29 @@
+name: Build and Publish NPM Packages for Beta
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+      - name: Set new version
+        run: pnpm version 0.0.0-${{ github.sha }} --no-git-checks --no-git-tag-version -r
+      - name: Build packages
+        run: pnpm build
+      - name: Publish packages
+        run: pnpm -r publish --no-git-checks --access=public --registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

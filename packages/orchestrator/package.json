@@ -1,6 +1,6 @@
 {
   "name": "@discord-k8s/orchestrator",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "scripts": {
     "build": "tsc"
   },
@@ -20,5 +20,9 @@
     "socket.io": "^4.8.3",
     "yaml": "^2.9.1",
     "zod": "^4.6.5"
-  }
+  },
+  "files": [
+    "dist/",
+    "package.json"
+  ]
 }

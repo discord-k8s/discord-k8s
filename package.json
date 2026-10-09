@@ -1,9 +1,10 @@
 {
   "name": "@discord-k8s/discord-k8s",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "engines": {
     "node": ">=24.17.0"
   },
+  "private": true,
   "scripts": {
     "build": "pnpm -r build",
     "docgen": "zod2md --entry ./packages/orchestrator/src/config.ts --output config.md --title Configuration"

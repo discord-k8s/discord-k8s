@@ -1,0 +1,26 @@
+name: Build and Publish NPM Packages for Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+      - name: Set new version
+        run: pnpm version ${{ github.event.release.name }} --no-git-checks --no-git-tag-version -r
+      - name: Build packages
+        run: pnpm build
+      - name: Publish packages
+        run: pnpm -r publish --no-git-checks --provenance --access=public
