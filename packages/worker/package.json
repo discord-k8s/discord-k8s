@@ -1,6 +1,9 @@
 {
   "name": "@discord-k8s/worker",
   "version": "0.0.0",
+  "repository": {
+    "url": "https://github.com/discord-k8s/discord-k8s"
+  },
   "scripts": {
     "build": "tsdown"
   },
