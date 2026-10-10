@@ -9,6 +9,11 @@ import {
 import { EventEmitter } from "@jpbberry/typed-emitter";
 
 export interface OrchestratorOptions {
+  /**
+   * Orchestrator WebSocket URL to connect with.
+   *
+   * If not provided, protocol will be set to ws:// and port set to :8080
+   */
   url: string;
   /**
    * Worker ID for this orchestrator to manage
@@ -19,6 +24,10 @@ export interface OrchestratorOptions {
    * Either implement reshard logic, or a simple process.exit(1)
    */
   onReshard: (data: WorkerData) => void;
+  /**
+   * Logging level for all orchestrator processes.
+   * @values One of: `debug`, `info`, `warn`, `error`
+   */
   logLevel: LogLevel;
 }
 
@@ -61,6 +70,10 @@ export class Orchestrator extends EventEmitter<{
     this.socket = io(url.toString(), { autoConnect: false });
   }
 
+  /**
+   * Open a worker connection with the orchestrator
+   * @returns Data about the requested worker, e.g shard information
+   */
   async open(): Promise<WorkerData> {
     this.socket.connect();
 
@@ -72,6 +85,10 @@ export class Orchestrator extends EventEmitter<{
     return this.workerData;
   }
 
+  /**
+   * Identifies current worker with the orchestrator
+   * @internal Typically ran automatically
+   */
   async hello() {
     this.log.debug(`Sending hello to orchestrator...`);
     const ack = await this.socket.emitWithAck("hello", this.workerId);
@@ -140,6 +157,12 @@ export class Orchestrator extends EventEmitter<{
     });
   }
 
+  /**
+   * Requests an identify (synchronously) for a specific shard.
+   * This will let the orchestrator know to let us know when the shard is can identify
+   * However, this will not wait for that shard to be ready, the orchestrator will send another event some other time letting us know.
+   * @param shardId The shard to request an identify for
+   */
   public requestIdentify(shardId: number) {
     this.log.debug(
       `Sending identify request for shard ${shardId} from orchestrator...`,
@@ -152,6 +175,11 @@ export class Orchestrator extends EventEmitter<{
     { resolve: () => void; reject: (reason?: any) => void }
   > = new Map();
 
+  /**
+   * Sends a request for identify to the orchestrator, and waits for a response allowing the shard to identify
+   * @param shardId The shard to request an identify for
+   * @returns A promise which resolves only once the shard can identify
+   */
   public async waitForIdentify(shardId: number) {
     const existingListener = this.identifyListeners.get(shardId);
     if (existingListener) {
