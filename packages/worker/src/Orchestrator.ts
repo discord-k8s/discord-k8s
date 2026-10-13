@@ -28,7 +28,7 @@ export interface OrchestratorOptions {
    * Logging level for all orchestrator processes.
    * @values One of: `debug`, `info`, `warn`, `error`
    */
-  logLevel: LogLevel;
+  logLevel?: LogLevel;
 }
 
 export class Orchestrator extends EventEmitter<{

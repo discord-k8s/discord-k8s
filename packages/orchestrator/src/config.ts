@@ -216,6 +216,14 @@ export const ConfigSpec = z.object({
       z.string().default("$PORT").transform(envVarTransform).transform(Number),
     ),
   hostname: z.string().default("0.0.0.0").transform(envVarTransform),
+  watch: withDeepDefaults(
+    z.object({
+      action: z
+        .enum(["none", "restart"])
+        .default("restart")
+        .describe("Action to do when a change is detected in the config file."),
+    }),
+  ).or(z.literal(false)),
 });
 
 export type Config = z.infer<typeof ConfigSpec>;
@@ -246,7 +254,30 @@ export const parseConfig = (input: ConfigInput | string): Config => {
     log.debug(`Parsed config: ${JSON.stringify(clonedData)}`);
   }
 
+  if (typeof input === "string" && result.data.watch !== false) {
+    createConfigListener(input, result.data.watch);
+  }
+
   return result.data;
 };
 
-// echo 'require("fs").writeFileSync("./config-out.json", JSON.stringify(require("./packages/orchestrator/dist/config.js").parseConfig("./example-config.yml"), null, 4))' | PORT=8080 BOT_TOKEN=aaa NAMESPACE=abc node
+const createConfigListener = (
+  configFile: string,
+  spec: Config["watch"] & object,
+) => {
+  const initialContent = fs.readFileSync(configFile, "utf-8");
+  fs.watchFile(configFile, () => {
+    const newContent = fs.readFileSync(configFile, "utf-8");
+    if (newContent !== initialContent) {
+      log.info(`Detected config file change (${configFile})`);
+      if (spec.action === "restart") {
+        log.info("Restarting due to config file change...");
+        process.exit(0);
+      } else {
+        log.debug(`Config file changed but action was: ${spec.action}`);
+      }
+    }
+  });
+
+  log.info(`Watching config file for change, action will be "${spec.action}"`);
+};
